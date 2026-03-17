@@ -39,6 +39,16 @@ RUN curl -sS -o /usr/local/bin/wp \
 COPY config/php.ini /usr/local/etc/php/conf.d/a12-custom.ini
 
 # ---------------------------------------------------------------
+# Configuração Apache customizada
+# ---------------------------------------------------------------
+COPY config/apache.conf /etc/apache2/conf-enabled/a12-custom.conf
+
+# ---------------------------------------------------------------
+# .htaccess (permalink structure + proxy de uploads local)
+# ---------------------------------------------------------------
+COPY .htaccess /var/www/html/.htaccess
+
+# ---------------------------------------------------------------
 # Must-use plugins (carregados automaticamente pelo WordPress)
 # ---------------------------------------------------------------
 COPY wp-content/mu-plugins/ /var/www/html/wp-content/mu-plugins/

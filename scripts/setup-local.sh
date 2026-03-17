@@ -20,8 +20,8 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
-# shellcheck disable=SC2046
-export $(grep -v '^#' .env | xargs)
+# shellcheck disable=SC1091
+set -a; source .env; set +a
 
 WP_PORT="${WP_PORT:-8080}"
 SITE_URL="http://localhost:${WP_PORT}"
@@ -79,6 +79,30 @@ docker exec "${CONTAINER_WP}" wp rewrite flush --allow-root
 echo "Removendo conteúdo padrão..."
 docker exec "${CONTAINER_WP}" wp post delete 1 2 --allow-root --force 2>/dev/null || true
 docker exec "${CONTAINER_WP}" wp comment delete 1 --allow-root --force 2>/dev/null || true
+
+# ---------------------------------------------------------------
+# 5. Restaurar uploads do zip Duplicator (se existir e uploads vazio)
+# ---------------------------------------------------------------
+UPLOAD_COUNT=$(docker exec "${CONTAINER_WP}" find /var/www/html/wp-content/uploads -type f 2>/dev/null | wc -l | tr -d ' ')
+ARCHIVE=$(ls *.zip 2>/dev/null | head -1)
+
+if [ "${UPLOAD_COUNT}" -lt "10" ] && [ -n "${ARCHIVE}" ]; then
+  echo "Restaurando uploads do arquivo ${ARCHIVE}..."
+  unzip -q "${ARCHIVE}" "wp-content/uploads/*" -d /tmp/a12-uploads-restore 2>/dev/null || true
+  if [ -d "/tmp/a12-uploads-restore/wp-content/uploads" ]; then
+    docker cp /tmp/a12-uploads-restore/wp-content/uploads/. "${CONTAINER_WP}:/var/www/html/wp-content/uploads/"
+    docker exec "${CONTAINER_WP}" chown -R www-data:www-data /var/www/html/wp-content/uploads
+    rm -rf /tmp/a12-uploads-restore
+    echo "Uploads restaurados."
+  fi
+elif [ "${UPLOAD_COUNT}" -gt "10" ]; then
+  echo "Uploads já presentes (${UPLOAD_COUNT} arquivos). Pulando..."
+fi
+
+# ---------------------------------------------------------------
+# 6. Regenerar CSS do Elementor
+# ---------------------------------------------------------------
+docker exec "${CONTAINER_WP}" wp elementor flush-css --allow-root 2>/dev/null || true
 
 echo ""
 echo "=== Setup concluído! ==="
