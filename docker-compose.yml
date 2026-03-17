@@ -1,0 +1,123 @@
+# Portal A12 — Ambiente Local
+# Ambiente: LOCAL  (WordPress + MySQL)
+#
+# Uso:
+#   cp .env.example .env   (preencha as variáveis)
+#   docker compose up -d
+#   open http://localhost:8080
+
+services:
+
+  # ---------------------------------------------------------------
+  # WordPress
+  # ---------------------------------------------------------------
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: a12-wordpress
+    restart: unless-stopped
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
+      WORDPRESS_DEBUG: "1"
+      WORDPRESS_DEBUG_LOG: "1"
+      WORDPRESS_DEBUG_DISPLAY: "0"
+      # Chaves de segurança — gere em https://api.wordpress.org/secret-key/1.1/salt/
+      WORDPRESS_AUTH_KEY:         ${WP_AUTH_KEY}
+      WORDPRESS_SECURE_AUTH_KEY:  ${WP_SECURE_AUTH_KEY}
+      WORDPRESS_LOGGED_IN_KEY:    ${WP_LOGGED_IN_KEY}
+      WORDPRESS_NONCE_KEY:        ${WP_NONCE_KEY}
+      WORDPRESS_AUTH_SALT:        ${WP_AUTH_SALT}
+      WORDPRESS_SECURE_AUTH_SALT: ${WP_SECURE_AUTH_SALT}
+      WORDPRESS_LOGGED_IN_SALT:   ${WP_LOGGED_IN_SALT}
+      WORDPRESS_NONCE_SALT:       ${WP_NONCE_SALT}
+    volumes:
+      # wp-content montado como volume para desenvolvimento local
+      - ./wp-content/themes:/var/www/html/wp-content/themes
+      - ./wp-content/plugins:/var/www/html/wp-content/plugins
+      - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
+      # uploads persistidos em volume nomeado (fora do container)
+      - uploads:/var/www/html/wp-content/uploads
+      # log do WordPress acessível localmente
+      - ./logs/wp-debug.log:/var/www/html/wp-content/debug.log
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - a12-local
+
+  # ---------------------------------------------------------------
+  # MySQL 8.0
+  # Em STAGE/PROD: substituído por RDS Aurora MySQL
+  # ---------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: a12-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      # Expõe localmente para acesso via cliente MySQL (TablePlus, DBeaver, etc.)
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Dump inicial (opcional): coloque arquivos .sql em db/init/
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - a12-local
+
+  # ---------------------------------------------------------------
+  # phpMyAdmin (opcional — apenas local)
+  # Acesse em http://localhost:8081
+  # ---------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: a12-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PMA_PORT:-8081}:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_LIMIT: 512M
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - a12-local
+    profiles:
+      # Só sobe com: docker compose --profile tools up -d
+      - tools
+
+# ---------------------------------------------------------------
+# Volumes
+# ---------------------------------------------------------------
+volumes:
+  mysql_data:
+    name: a12-local-mysql-data
+  uploads:
+    name: a12-local-uploads
+
+# ---------------------------------------------------------------
+# Rede
+# ---------------------------------------------------------------
+networks:
+  a12-local:
+    name: a12-local-network

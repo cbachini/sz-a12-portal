@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# scripts/wp — Wrapper WP-CLI para o container local
+# Uso: ./scripts/wp <comando wp-cli>
+# Ex.: ./scripts/wp plugin list
+#      ./scripts/wp user create admin admin@a12.com --role=administrator
+
+set -euo pipefail
+
+CONTAINER="a12-wordpress"
+
+# Verifica se o container está rodando
+if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+  echo "Erro: container '${CONTAINER}' não está rodando."
+  echo "Rode: docker compose up -d"
+  exit 1
+fi
+
+docker exec -it "${CONTAINER}" wp --allow-root "$@"
