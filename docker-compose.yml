@@ -28,6 +28,7 @@ services:
       WORDPRESS_DEBUG: "1"
       WORDPRESS_DEBUG_LOG: "1"
       WORDPRESS_DEBUG_DISPLAY: "0"
+      A12_ENV: local
       # Chaves de segurança — gere em https://api.wordpress.org/secret-key/1.1/salt/
       WORDPRESS_AUTH_KEY:         ${WP_AUTH_KEY}
       WORDPRESS_SECURE_AUTH_KEY:  ${WP_SECURE_AUTH_KEY}
@@ -42,8 +43,8 @@ services:
       - ./wp-content/themes:/var/www/html/wp-content/themes
       - ./wp-content/plugins:/var/www/html/wp-content/plugins
       - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
-      # uploads persistidos em volume nomeado (fora do container)
-      - uploads:/var/www/html/wp-content/uploads
+      # uploads persistidos em pasta local (visível no Finder, ignorada pelo git)
+      - ./wp-content/uploads:/var/www/html/wp-content/uploads
       # log do WordPress acessível localmente
       - ./logs/wp-debug.log:/var/www/html/wp-content/debug.log
     depends_on:
@@ -112,8 +113,6 @@ services:
 volumes:
   mysql_data:
     name: a12-local-mysql-data
-  uploads:
-    name: a12-local-uploads
 
 # ---------------------------------------------------------------
 # Rede
