@@ -26,7 +26,7 @@ services:
       WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
       WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
       WORDPRESS_DEBUG: "1"
-      WORDPRESS_DEBUG_LOG: "1"
+      WORDPRESS_DEBUG_LOG: "/var/www/html/wp-content/logs/debug.log"
       WORDPRESS_DEBUG_DISPLAY: "0"
       A12_ENV: local
       # Chaves de segurança — gere em https://api.wordpress.org/secret-key/1.1/salt/
@@ -45,8 +45,8 @@ services:
       - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
       # uploads persistidos em pasta local (visível no Finder, ignorada pelo git)
       - ./wp-content/uploads:/var/www/html/wp-content/uploads
-      # log do WordPress acessível localmente
-      - ./logs/wp-debug.log:/var/www/html/wp-content/debug.log
+      # logs do WordPress acessíveis localmente (diretório, não arquivo)
+      - ./logs:/var/www/html/wp-content/logs
     depends_on:
       mysql:
         condition: service_healthy
