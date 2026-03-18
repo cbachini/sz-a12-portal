@@ -75,6 +75,33 @@ docker compose --profile tools up -d
 # Acesse: http://localhost:8081
 ```
 
+### Espelho local do portal
+
+Se você quiser que outro dev tenha um espelho do ambiente atual, não basta o Git: é preciso compartilhar o estado do banco e dos uploads.
+
+Exportar o espelho na máquina de origem:
+
+```bash
+./scripts/export-mirror.sh
+```
+
+Isso gera dois arquivos em `db/dumps/`:
+- dump do banco `.sql.gz`
+- pacote dos uploads `.tar.gz`
+
+No clone do outro dev:
+
+```bash
+cp .env.example .env
+docker compose up -d
+./scripts/restore-mirror.sh caminho/para/dump.sql.gz caminho/para/uploads.tar.gz
+```
+
+Observações:
+- `docker compose down` preserva o banco porque o MySQL usa volume Docker.
+- `docker compose down -v` remove o volume e apaga o banco local.
+- Os arquivos do espelho devem ser compartilhados fora do GitHub.
+
 ---
 
 ## Importar amostra de conteúdo

@@ -1,0 +1,108 @@
+/*
+Theme Name: A12 Theme
+Theme URI: https://a12.com/
+Description: A12 Theme is a child theme based on Hello Elementor, customized and maintained by Soyuz for the Portal A12.
+Author: Soyuz Digital Studio LTDA
+Author URI: https://soyuz.com.br/
+Template: hello-elementor
+Version: 1.0.0
+Text Domain: a12-theme
+License: GNU General Public License v3 or later.
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Tags: flexible-header, custom-colors, custom-menu, custom-logo, editor-style, featured-images, rtl-language-support, threaded-comments, translation-ready
+*/
+
+/* =========================
+   Variáveis por área
+========================= */
+.redacao{ --area-hex:#503A70; --area-rgb:80, 58, 112; }
+.santuario{ --area-hex:#063F5B; --area-rgb:6, 63, 91; }
+.tv{ --area-hex:#7F003C; --area-rgb:127, 0, 60; }
+.radio{ --area-hex:#2553C6; --area-rgb:37, 83, 198; }
+.radio-aparecida{ --area-hex:#052E27; --area-rgb:5, 46, 39; }
+.radio-pop{ --area-hex:#2553C6; --area-rgb:37, 83, 198; }
+.redentoristas{ --area-hex:#115669; --area-rgb:17, 86, 105; }
+.devotos{ --area-hex:#32277B; --area-rgb:50, 39, 123; }
+
+/* Menus (fora do container da área) */
+.menu-redacao a, #menu-redacao .e-n-menu-title-text{
+	color:#503A70 !important;
+}
+
+.menu-santuario a, #menu-santuario .e-n-menu-title-text{
+	color:#063F5B !important;
+}
+
+.menu-tv a, #menu-tv .e-n-menu-title-text{
+	color:#7F003C !important;
+}
+
+.menu-radio a, #menu-radio .e-n-menu-title-text{
+	color:#2553C6 !important;
+}
+
+.menu-radio-aparecida a, #menu-radio-aparecida .e-n-menu-title-text{
+	color:#052E27 !important;
+}
+
+.menu-radio-pop a, #menu-radio-pop .e-n-menu-title-text{
+	color:#2553C6 !important;
+}
+
+.menu-redentoristas a, #menu-redentoristas .e-n-menu-title-text{
+	color:#115669 !important;
+}
+
+.menu-devotos a, #menu-devotos .e-n-menu-title-text{
+	color:#32277B !important;
+}
+
+
+/* =========================
+   Cores (títulos/headings/termo)
+========================= */
+:is(.redacao,.santuario,.tv,.radio,.radio-aparecida,.radio-pop,.redentoristas,.devotos)
+:is(.a12-termo a,.titulo a,.titulo-g a,.elementor-heading-title,.wp-block-heading){
+	color: var(--area-hex)!important;
+}
+
+/* =========================
+   Pills (.a12-termo) e links no conteúdo
+========================= */
+:is(.redacao,.santuario,.tv,.radio,.radio-aparecida,.radio-pop,.redentoristas,.devotos)
+.a12-termo{
+	font-weight: 600;
+	padding: 12px 16px;
+	border-radius: 32px;
+	color: rgba(var(--area-rgb), 1)!important;
+	background-color: rgba(var(--area-rgb), 0.08);
+}
+
+:is(.redacao,.santuario,.tv,.radio,.radio-aparecida,.radio-pop,.redentoristas,.devotos)
+.elementor-widget-theme-post-content a, .elementor-widget-theme-post-content p a{
+	color: rgba(var(--area-rgb), 1)!important;
+	background-color: rgba(var(--area-rgb), 0.08);
+}
+
+/* Tipografia geral */
+:is(.redacao,.santuario,.tv,.radio,.radio-aparecida,.radio-pop,.redentoristas,.devotos)
+blockquote, blockquote b, blockquote strong{
+	font-size: 1.4rem;
+	line-height: 2.4rem;
+	font-weight:600!important;
+	font-style: italic;
+	color:rgba(var(--area-rgb), 1)!important;
+}
+
+:is(.redacao,.santuario,.tv,.radio,.radio-aparecida,.radio-pop,.redentoristas,.devotos)
+.elementor-widget-theme-post-content b, .elementor-widget-theme-post-content strong{
+	font-weight:700!important;
+	color:rgba(var(--area-rgb), 1)!important;
+}
+
+
+:is(.redacao,.santuario,.tv,.radio,.radio-aparecida,.radio-pop,.redentoristas,.devotos)
+.autor{
+	font-weight:700!important;
+	color:rgba(var(--area-rgb), 1)!important;
+}
