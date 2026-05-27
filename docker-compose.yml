@@ -29,6 +29,13 @@ services:
       WORDPRESS_DEBUG_LOG: "/var/www/html/wp-content/logs/debug.log"
       WORDPRESS_DEBUG_DISPLAY: "0"
       A12_ENV: local
+      WP_NOINDEX: "${WP_NOINDEX:-true}"
+      # Injeta require_once do autoloader Composer no wp-config.php gerado.
+      # Necessário para o s3-uploads funcionar (autoload do AWS SDK).
+      # Em local, o vendor/ é montado via volume abaixo.
+      WORDPRESS_CONFIG_EXTRA: |
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (file_exists($autoload)) { require_once $autoload; }
       # Chaves de segurança — gere em https://api.wordpress.org/secret-key/1.1/salt/
       WORDPRESS_AUTH_KEY:         ${WP_AUTH_KEY}
       WORDPRESS_SECURE_AUTH_KEY:  ${WP_SECURE_AUTH_KEY}
@@ -47,6 +54,9 @@ services:
       - ./wp-content/uploads:/var/www/html/wp-content/uploads
       # logs do WordPress acessíveis localmente (diretório, não arquivo)
       - ./logs:/var/www/html/wp-content/logs
+      # vendor/ do Composer (necessário para autoload do s3-uploads)
+      # Execute `composer install` localmente ou via container para gerar
+      - ./vendor:/var/www/html/vendor:delegated
     depends_on:
       mysql:
         condition: service_healthy
