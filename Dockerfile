@@ -53,12 +53,10 @@ RUN mkdir -p /etc/apache2/ssl \
        -subj  "/C=BR/ST=SP/O=A12 Local Dev/CN=wordpress.sz-a12-portal.orb.local" \
        -addext "subjectAltName=DNS:wordpress.sz-a12-portal.orb.local,DNS:localhost,IP:127.0.0.1"
 
-# ---------------------------------------------------------------
-# Redis object-cache drop-in (funciona sem plugin ativo)
-# Copiado em /usr/src/wordpress/ para que o entrypoint oficial preserve no boot
-# ---------------------------------------------------------------
-RUN curl -sS -o /usr/src/wordpress/wp-content/object-cache.php \
-    "https://raw.githubusercontent.com/rhubarbgroup/redis-cache/develop/includes/object-cache.php"
+# Redis object-cache drop-in: desabilitado até Redis (ElastiCache) ser provisionado no ECS.
+# Para reativar: descomentar o bloco abaixo e definir WP_REDIS_HOST na task definition.
+# RUN curl -sS -o /usr/src/wordpress/wp-content/object-cache.php \
+#     "https://raw.githubusercontent.com/rhubarbgroup/redis-cache/develop/includes/object-cache.php"
 
 # ---------------------------------------------------------------
 # Apache: VirtualHost SSL + MPM afinado
