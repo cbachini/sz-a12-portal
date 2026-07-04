@@ -241,6 +241,7 @@ Funções do Redis:
 * object cache WordPress  
 * cache de queries  
 * redução de carga no banco  
+* status no código atual do portal: ainda não integrado no runtime da aplicação (planejado para etapa futura)  
    Novo A12 \- Arquitetura de Infra…
 
 ---

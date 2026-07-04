@@ -1,0 +1,42 @@
+{
+  "name": "a12/portal",
+  "description": "Portal A12 — WordPress",
+  "type": "project",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://wpackagist.org",
+      "only": ["wpackagist-plugin/*", "wpackagist-theme/*"]
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "composer/installers": "^2.3",
+    "humanmade/s3-uploads": "^3.0",
+    "wpackagist-plugin/advanced-custom-fields": "^6.0",
+    "wpackagist-plugin/polylang": "^3.0",
+    "wpackagist-plugin/wordpress-seo": "^22.0",
+    "wpackagist-plugin/elementor": "^3.0",
+    "wpackagist-theme/hello-elementor": "^3.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    },
+    "vendor-dir": "vendor",
+    "optimize-autoloader": true,
+    "platform": {
+      "php": "8.2"
+    }
+  },
+  "extra": {
+    "installer-paths": {
+      "wp-content/plugins/{$name}/": [
+        "type:wordpress-plugin"
+      ],
+      "wp-content/themes/{$name}/": [
+        "type:wordpress-theme"
+      ]
+    }
+  }
+}

@@ -158,6 +158,80 @@ sz-a12-portal/
 
 ---
 
+## Checklist de implantação AWS (resumo técnico)
+
+### Variáveis de ambiente usadas pela aplicação
+
+WordPress / banco:
+- `WORDPRESS_DB_HOST`
+- `WORDPRESS_DB_NAME`
+- `WORDPRESS_DB_USER`
+- `WORDPRESS_DB_PASSWORD`
+- `WORDPRESS_TABLE_PREFIX`
+- `WORDPRESS_DEBUG`
+- `WORDPRESS_DEBUG_LOG`
+- `WORDPRESS_DEBUG_DISPLAY`
+
+Aplicação / ambiente:
+- `A12_ENV`
+- `WP_NOINDEX`
+- `WORDPRESS_CONFIG_EXTRA`
+
+S3 uploads (ambientes não-locais):
+- `S3_UPLOADS_BUCKET` (obrigatória fora de local)
+- `S3_UPLOADS_REGION` (default `sa-east-1`)
+- `S3_UPLOADS_BUCKET_URL` (opcional; ex.: CloudFront)
+
+Chaves WordPress:
+- `WORDPRESS_AUTH_KEY`
+- `WORDPRESS_SECURE_AUTH_KEY`
+- `WORDPRESS_LOGGED_IN_KEY`
+- `WORDPRESS_NONCE_KEY`
+- `WORDPRESS_AUTH_SALT`
+- `WORDPRESS_SECURE_AUTH_SALT`
+- `WORDPRESS_LOGGED_IN_SALT`
+- `WORDPRESS_NONCE_SALT`
+
+### Redis
+
+Status atual do código: Redis não está configurado/consumido no runtime da aplicação.
+
+Não há variáveis ativas no código para:
+- `WP_REDIS_HOST`
+- `REDIS_HOST`
+- `REDIS_URL`
+
+### Variáveis sensíveis
+
+Devem ir em AWS Secrets Manager/SSM (não versionar e não expor em plain text):
+- credenciais de banco (`DB_PASSWORD`, `DB_ROOT_PASSWORD`, `WORDPRESS_DB_PASSWORD`)
+- chaves e salts do WordPress
+
+### Portas
+
+- Container WordPress escuta em `80`.
+- Em local: `${WP_PORT:-8080}:80`.
+- Serviços auxiliares locais:
+    - MySQL: `${MYSQL_PORT:-3306}:3306`
+    - phpMyAdmin: `${PMA_PORT:-8081}:80`
+
+### Mounts persistentes
+
+Além de uploads, o setup local usa:
+- `./wp-content/themes:/var/www/html/wp-content/themes`
+- `./wp-content/plugins:/var/www/html/wp-content/plugins`
+- `./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins`
+- `./logs:/var/www/html/wp-content/logs`
+- `./vendor:/var/www/html/vendor`
+- `mysql_data:/var/lib/mysql`
+
+### Health check
+
+- Endpoint de aplicação: `GET /health.php` (retorna HTTP 200 e `OK`).
+- Em compose, há healthcheck explícito apenas para MySQL.
+
+---
+
 ## Setup com Podman no Windows
 
 Se você usa **Podman** em vez de Docker Desktop (ex.: Windows), siga estes passos.

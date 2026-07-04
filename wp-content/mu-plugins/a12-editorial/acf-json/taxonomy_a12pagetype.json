@@ -1,0 +1,65 @@
+{
+    "key": "taxonomy_a12pagetype",
+    "title": "Tipos de Página",
+    "menu_order": 0,
+    "active": true,
+    "taxonomy": "page_type",
+    "object_type": [
+        "page"
+    ],
+    "advanced_configuration": 0,
+    "import_source": "",
+    "import_date": "",
+    "labels": {
+        "name": "Tipos de Página",
+        "singular_name": "Tipo de Página",
+        "menu_name": "Tipos de Página",
+        "all_items": "Todos os Tipos de Página",
+        "add_new_item": "Adicionar Tipo de Página",
+        "edit_item": "Editar Tipo de Página",
+        "update_item": "Atualizar Tipo de Página",
+        "search_items": "Buscar Tipos de Página",
+        "not_found": "Nenhum Tipo de Página encontrado"
+    },
+    "description": "",
+    "capabilities": {
+        "manage_terms": "manage_categories",
+        "edit_terms": "manage_categories",
+        "delete_terms": "manage_categories",
+        "assign_terms": "edit_posts"
+    },
+    "public": true,
+    "publicly_queryable": true,
+    "hierarchical": false,
+    "show_ui": true,
+    "show_in_menu": true,
+    "show_in_nav_menus": false,
+    "show_in_rest": true,
+    "rest_base": "page-type",
+    "rest_namespace": "wp\/v2",
+    "rest_controller_class": "WP_REST_Terms_Controller",
+    "show_tagcloud": true,
+    "show_in_quick_edit": true,
+    "show_admin_column": true,
+    "rewrite": {
+        "permalink_rewrite": "custom",
+        "slug": "tipo-pagina",
+        "with_front": false,
+        "rewrite_hierarchical": false
+    },
+    "query_var": "taxonomy_key",
+    "query_var_name": "",
+    "default_term": {
+        "default_term_enabled": false,
+        "default_term_name": "",
+        "default_term_slug": "",
+        "default_term_description": ""
+    },
+    "sort": null,
+    "meta_box": "default",
+    "meta_box_cb": "",
+    "meta_box_sanitize_cb": "",
+    "allow_ai_access": false,
+    "ai_description": "",
+    "modified": 1782842169
+}

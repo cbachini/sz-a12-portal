@@ -19,6 +19,7 @@ services:
     restart: unless-stopped
     ports:
       - "${WP_PORT:-8080}:80"
+      - "${WP_SSL_PORT:-443}:443"
     environment:
       WORDPRESS_DB_HOST: mysql:3306
       WORDPRESS_DB_NAME: ${DB_NAME}
@@ -27,15 +28,33 @@ services:
       WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
       WORDPRESS_DEBUG: "1"
       WORDPRESS_DEBUG_LOG: "/var/www/html/wp-content/logs/debug.log"
-      WORDPRESS_DEBUG_DISPLAY: "0"
+      WORDPRESS_DEBUG_DISPLAY: "1"
       A12_ENV: local
       WP_NOINDEX: "${WP_NOINDEX:-true}"
       # Injeta require_once do autoloader Composer no wp-config.php gerado.
       # Necessário para o s3-uploads funcionar (autoload do AWS SDK).
       # Em local, o vendor/ é montado via volume abaixo.
+      WP_REDIS_HOST: redis
+      WP_REDIS_PORT: "6379"
+      WP_REDIS_TIMEOUT: "1"
+      WP_REDIS_READ_TIMEOUT: "1"
+      WP_REDIS_DATABASE: "0"
       WORDPRESS_CONFIG_EXTRA: |
-        $autoload = __DIR__ . '/vendor/autoload.php';
-        if (file_exists($autoload)) { require_once $autoload; }
+        $$autoload = __DIR__ . '/vendor/autoload.php';
+        if (file_exists($$autoload)) { require_once $$autoload; }
+        define('WPLANG', 'pt_BR');
+        define('SCRIPT_DEBUG', true);
+        define('SAVEQUERIES', true);
+        // Redis Object Cache
+        define('WP_REDIS_HOST',         getenv('WP_REDIS_HOST') ?: 'redis');
+        define('WP_REDIS_PORT',   (int) (getenv('WP_REDIS_PORT') ?: 6379));
+        define('WP_REDIS_TIMEOUT',      1);
+        define('WP_REDIS_READ_TIMEOUT', 1);
+        define('WP_CACHE',              true);
+        // SSL local
+        if (!empty($$_SERVER['HTTPS']) && $$_SERVER['HTTPS'] !== 'off') {
+            $$_SERVER['REQUEST_SCHEME'] = 'https';
+        }
       # Chaves de segurança — gere em https://api.wordpress.org/secret-key/1.1/salt/
       WORDPRESS_AUTH_KEY:         ${WP_AUTH_KEY}
       WORDPRESS_SECURE_AUTH_KEY:  ${WP_SECURE_AUTH_KEY}
@@ -54,14 +73,41 @@ services:
       - ./wp-content/uploads:/var/www/html/wp-content/uploads
       # logs do WordPress acessíveis localmente (diretório, não arquivo)
       - ./logs:/var/www/html/wp-content/logs
+      # Redis object-cache drop-in (persistente via volume, imune ao entrypoint)
+      - ./wp-content/object-cache.php:/var/www/html/wp-content/object-cache.php:ro
+      # Certificados mkcert (confiáveis pelo macOS/Chrome) — sobrepõem o auto-assinado do Dockerfile
+      - ./config/ssl/a12-local.crt:/etc/apache2/ssl/a12-local.crt:ro
+      - ./config/ssl/a12-local.key:/etc/apache2/ssl/a12-local.key:ro
       # vendor/ do Composer (necessário para autoload do s3-uploads)
       # Execute `composer install` localmente ou via container para gerar
       - ./vendor:/var/www/html/vendor:delegated
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - a12-local
+
+  # ---------------------------------------------------------------
+  # Redis — Object Cache (PHP-CLI, sem Apache)
+  # ---------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: a12-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    networks:
+      - a12-local
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   # ---------------------------------------------------------------
   # MySQL 8.0

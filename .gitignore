@@ -11,6 +11,39 @@
 wp-content/uploads/
 
 # ---------------------------------------------------------------
+# Dependências PHP via Composer — geradas em build / install local
+# ---------------------------------------------------------------
+vendor/
+composer.lock
+
+# ---------------------------------------------------------------
+# Plugins gerenciados via Composer (WPackagist) — não versionar
+# ---------------------------------------------------------------
+wp-content/plugins/s3-uploads/
+wp-content/plugins/advanced-custom-fields/
+wp-content/plugins/polylang/
+wp-content/plugins/wordpress-seo/
+wp-content/plugins/elementor/
+
+# ---------------------------------------------------------------
+# Temas gerenciados via Composer (WPackagist) — não versionar
+# ---------------------------------------------------------------
+wp-content/themes/hello-elementor/
+wp-content/themes/twentytwentythree/
+wp-content/themes/twentytwentyfour/
+wp-content/themes/twentytwentyfive/
+
+# ---------------------------------------------------------------
+# Plugins removidos da stack — fora da arquitetura definida
+# ---------------------------------------------------------------
+wp-content/plugins/akismet/
+wp-content/plugins/google-site-kit/
+wp-content/plugins/duplicator/
+wp-content/plugins/duplicate-menu/
+wp-content/plugins/duplicate-post/
+wp-content/plugins/wp-security-audit-log/
+
+# ---------------------------------------------------------------
 # Logs
 # ---------------------------------------------------------------
 logs/*.log
@@ -48,3 +81,10 @@ installer.php
 # Node (caso algum tooling local use)
 # ---------------------------------------------------------------
 node_modules/
+config/ssl/*.key
+config/ssl/*.crt
+
+# ---------------------------------------------------------------
+# Arquivos sensíveis de credenciais AWS (Dedalus)
+# ---------------------------------------------------------------
+docs/dedalus/*accessKeys*.csv

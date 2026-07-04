@@ -1,0 +1,77 @@
+name: Deploy DEV
+
+on:
+  push:
+    branches:
+      - main        # todo push em main dispara deploy no DEV
+  workflow_dispatch: # permite rodar manualmente pela UI do GitHub
+
+env:
+  AWS_REGION:      sa-east-1
+  AWS_ACCOUNT_ID:  688819141871
+  ECR_REPO:        a12-portal-dev
+  ECS_CLUSTER:     a12-dev-cluster
+  ECS_SERVICE:     a12-portal-dev-service
+  TASK_FAMILY:     a12-portal-dev
+  CONTAINER_NAME:  a12-portal
+
+jobs:
+  deploy:
+    name: Build, Push e Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # necessário para OIDC (sem credenciais estáticas)
+      contents: read
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Autenticar na AWS via OIDC (sem ACCESS_KEY hardcoded) ──────────
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ── 3. Login no ECR ────────────────────────────────────────────────────
+      - name: Login no ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ── 4. Build e Push da imagem ──────────────────────────────────────────
+      - name: Build e Push imagem Docker
+        id: build
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPO:latest \
+            .
+
+          docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPO:latest
+
+          echo "image=$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # ── 5. Atualizar task definition com a nova imagem ────────────────────
+      - name: Atualizar task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition-arn: ${{ env.TASK_FAMILY }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build.outputs.image }}
+
+      # ── 6. Deploy no ECS ───────────────────────────────────────────────────
+      - name: Deploy no ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

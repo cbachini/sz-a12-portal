@@ -69,6 +69,37 @@ add_action('after_setup_theme', function () {
 });
 
 /**
+ * A12 – Reescrita dinâmica de links internos legados
+ *
+ * Links importados do portal antigo (https://www.a12.com/...) são reescritos
+ * para o domínio atual do WordPress em tempo de renderização, sem alterar o
+ * conteúdo armazenado no banco. Funciona em qualquer ambiente
+ * (local, staging, produção) pois usa home_url() como base.
+ *
+ * Nota: quando o mu-plugin a12-link-rewrite.php está ativo, ele declara esta
+ * função antes do tema carregar. O guard abaixo evita "Cannot redeclare".
+ */
+if ( ! function_exists( 'a12_rewrite_legacy_links' ) ) {
+    function a12_rewrite_legacy_links( string $content ): string {
+        $home = rtrim( home_url(), '/' );
+        return str_replace(
+            [ 'https://www.a12.com', 'https://a12.com', 'http://www.a12.com' ],
+            $home,
+            $content
+        );
+    }
+    add_filter( 'the_content', 'a12_rewrite_legacy_links' );
+    add_filter( 'rest_prepare_post', function ( $response, $post, $request ) {
+        $data = $response->get_data();
+        if ( ! empty( $data['content']['rendered'] ) ) {
+            $data['content']['rendered'] = a12_rewrite_legacy_links( $data['content']['rendered'] );
+            $response->set_data( $data );
+        }
+        return $response;
+    }, 10, 3 );
+}
+
+/**
  * Shortcode: [a12_area_termo] ou [a12_area_termo post_id="123"]
  * Detecta a taxonomia de área pelo post_type (tax_tv, tax_radio_pop, etc),
  * ignora post_tag e retorna o termo mais específico (mais profundo) com link.

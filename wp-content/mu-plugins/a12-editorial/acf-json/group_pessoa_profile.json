@@ -1,0 +1,96 @@
+{
+    "key": "group_pessoa_profile",
+    "title": "Perfil da Pessoa",
+    "fields": [
+        {
+            "key": "field_pessoa_email",
+            "label": "E-mail",
+            "name": "email",
+            "aria-label": "",
+            "type": "email",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "50", "class": "", "id": "" },
+            "default_value": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": "",
+            "allow_in_bindings": 0
+        },
+        {
+            "key": "field_pessoa_twitter",
+            "label": "Twitter / X",
+            "name": "twitter",
+            "aria-label": "",
+            "type": "url",
+            "instructions": "URL completa (ex.: https://x.com/nome)",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "50", "class": "", "id": "" },
+            "default_value": "",
+            "placeholder": "https://x.com/",
+            "allow_in_bindings": 0
+        },
+        {
+            "key": "field_pessoa_facebook",
+            "label": "Facebook",
+            "name": "facebook",
+            "aria-label": "",
+            "type": "url",
+            "instructions": "URL completa (ex.: https://facebook.com/nome)",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "50", "class": "", "id": "" },
+            "default_value": "",
+            "placeholder": "https://facebook.com/",
+            "allow_in_bindings": 0
+        },
+        {
+            "key": "field_pessoa_instagram",
+            "label": "Instagram",
+            "name": "instagram",
+            "aria-label": "",
+            "type": "url",
+            "instructions": "URL completa (ex.: https://instagram.com/nome)",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "50", "class": "", "id": "" },
+            "default_value": "",
+            "placeholder": "https://instagram.com/",
+            "allow_in_bindings": 0
+        },
+        {
+            "key": "field_pessoa_youtube",
+            "label": "YouTube",
+            "name": "youtube",
+            "aria-label": "",
+            "type": "url",
+            "instructions": "Canal YouTube (ex.: https://youtube.com/@nome)",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "50", "class": "", "id": "" },
+            "default_value": "",
+            "placeholder": "https://youtube.com/",
+            "allow_in_bindings": 0
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "post_type",
+                "operator": "==",
+                "value": "person"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 1
+}
