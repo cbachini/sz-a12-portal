@@ -17,6 +17,10 @@
     "wpackagist-plugin/polylang": "^3.0",
     "wpackagist-plugin/wordpress-seo": "^22.0",
     "wpackagist-plugin/elementor": "^3.0",
+    "wpackagist-plugin/miniorange-wp-ldap-login": "*",
+    "wpackagist-plugin/pojo-accessibility": "*",
+    "wpackagist-plugin/redirection": "*",
+    "wpackagist-plugin/safe-svg": "*",
     "wpackagist-theme/hello-elementor": "^3.0"
   },
   "config": {

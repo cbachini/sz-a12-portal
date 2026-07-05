@@ -11,10 +11,10 @@
 wp-content/uploads/
 
 # ---------------------------------------------------------------
-# Dependências PHP via Composer — geradas em build / install local
+# Dependências PHP via Composer — vendor gerada em build
+# composer.lock é versionado para garantir builds reproduzíveis
 # ---------------------------------------------------------------
 vendor/
-composer.lock
 
 # ---------------------------------------------------------------
 # Plugins gerenciados via Composer (WPackagist) — não versionar
