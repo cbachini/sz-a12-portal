@@ -207,9 +207,7 @@ else
   diff_row "Arquivos" "$L_COUNT" "$A_COUNT"
   diff_row "Tamanho total" "$L_SIZE" "$A_SIZE"
 
-  ONLY_LOCAL=$(aws s3 sync "$LOCAL_UPLOADS" "s3://$S3_BUCKET/uploads/" \
-    --region "$AWS_REGION" --dryrun --exclude "*.DS_Store" 2>/dev/null | \
-    grep "^upload:" | wc -l | tr -d ' ' || echo "?")
+  ONLY_LOCAL=$(find "$LOCAL_UPLOADS" -type f ! -name '.DS_Store' 2>/dev/null | wc -l | tr -d ' ')
   ONLY_S3=$(aws s3 sync "s3://$S3_BUCKET/uploads/" "$LOCAL_UPLOADS" \
     --region "$AWS_REGION" --dryrun --exclude "*.DS_Store" 2>/dev/null | \
     grep "^download:" | wc -l | tr -d ' ' || echo "?")
@@ -246,7 +244,7 @@ else
     echo "  → AWS tem mais posts: ./scripts/pull-from-aws.sh --skip-uploads" || true
 
   [[ "$ONLY_LOCAL" != "0" && "$ONLY_LOCAL" != "?" ]] && \
-    echo "  → Mídia faltando no S3: aws s3 sync ./wp-content/uploads/ s3://$S3_BUCKET/uploads/ --region $AWS_REGION --profile $AWS_PROFILE"
+    echo "  → Mídia faltando no S3: AWS_PROFILE=$AWS_PROFILE AWS_REGION=$AWS_REGION S3_BUCKET=$S3_BUCKET ./scripts/upload-media-to-s3.sh"
 
   [[ "$ONLY_S3" != "0" && "$ONLY_S3" != "?" ]] && \
     echo "  → Mídia faltando localmente: aws s3 sync s3://$S3_BUCKET/uploads/ ./wp-content/uploads/ --region $AWS_REGION --profile $AWS_PROFILE"

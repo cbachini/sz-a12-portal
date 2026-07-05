@@ -182,14 +182,13 @@ fi
 if $SKIP_UPLOADS; then
   log "Sync de uploads ignorado (--skip-uploads)"
 else
-  log "Sincronizando uploads locais → S3 (pode demorar)..."
+  log "Sincronizando uploads locais → S3 com uploader resiliente (pode demorar)..."
   if $DRY_RUN; then
-    COUNT=$(AWS_PAGER="" aws s3 sync "$LOCAL_UPLOADS" "s3://$S3_BUCKET/uploads/" \
-      --region "$AWS_REGION" --dryrun --exclude "*.DS_Store" 2>&1 | wc -l | tr -d ' ')
-    skip "aws s3 sync (~$COUNT arquivos a sincronizar)"
+    COUNT=$(find "$LOCAL_UPLOADS" -type f ! -name '.DS_Store' 2>/dev/null | wc -l | tr -d ' ')
+    skip "upload-media-to-s3.sh (~$COUNT arquivos a verificar)"
   else
-    aws s3 sync "$LOCAL_UPLOADS" "s3://$S3_BUCKET/uploads/" \
-      --region "$AWS_REGION" --exclude "*.DS_Store" --no-progress
+    AWS_PROFILE="$AWS_PROFILE" AWS_REGION="$AWS_REGION" S3_BUCKET="$S3_BUCKET" \
+      "$(dirname "$0")/upload-media-to-s3.sh"
     ok "Uploads sincronizados"
   fi
 fi
