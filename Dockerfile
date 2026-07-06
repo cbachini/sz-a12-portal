@@ -21,6 +21,8 @@ LABEL project="Portal A12"
 # Dependências do sistema
 # ---------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    unzip \
     less \
     default-mysql-client \
     openssl \
@@ -126,10 +128,19 @@ COPY wp-content/plugins/elementor-pro/ /var/www/html/wp-content/plugins/elemento
 COPY wp-content/themes/a12-theme/ /var/www/html/wp-content/themes/a12-theme/
 
 # ---------------------------------------------------------------
-# Idioma: pt-BR
-# WPLANG é definido em docker-compose.yml (WORDPRESS_CONFIG_EXTRA)
-# Após primeiro boot: wp language core install pt_BR --activate --allow-root
+# Idioma pt-BR — arquivos baked na imagem
+# Lê a versão exata do WP instalado e baixa a tradução correspondente.
+# Sem isso, o WP reverte para inglês a cada novo container.
 # ---------------------------------------------------------------
+RUN WP_VER=$(grep -oP "(?<=\\\$wp_version = ')[\d.]+" /usr/src/wordpress/wp-includes/version.php) \
+    && echo "WP version: ${WP_VER}" \
+    && mkdir -p /usr/src/wordpress/wp-content/languages \
+    && curl -fsSL \
+       "https://downloads.wordpress.org/translation/core/${WP_VER}/pt_BR.zip" \
+       -o /tmp/pt_BR_core.zip \
+    && unzip -q /tmp/pt_BR_core.zip -d /usr/src/wordpress/wp-content/languages/ \
+    && rm /tmp/pt_BR_core.zip \
+    && echo "pt_BR language files baked for WP ${WP_VER}"
 
 # ---------------------------------------------------------------
 # Permissões
