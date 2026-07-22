@@ -5,6 +5,26 @@ log() {
   echo "[a12-efs-seed] $*"
 }
 
+WP_PATH="/var/www/html"
+
+# wp-content/upgrade-temp-backup: usado pelo WP >= 6.3 para guardar uma copia
+# da versao antiga de um plugin/tema ANTES de atualizar (permite rollback se
+# a atualizacao falhar). Fica no disco local efemero do container — NAO faz
+# parte de nenhum access point EFS — entao normalmente nem existe ate a
+# primeira atualizacao real. Se essa pasta for criada por um processo rodando
+# como root (ex.: wp-cli --allow-root usado em diagnostico manual via
+# `ecs execute-command`), ela fica root:root; qualquer atualizacao real
+# seguinte (rodando como www-data via Apache/mod_php) falha ao tentar
+# escrever ali, com o erro "Nao foi possivel mover a versao antiga para o
+# diretorio upgrade-temp-backup" — e o plugin fica CORROMPIDO no meio do
+# processo (incidente real: elementor-pro, 2026-07-22, ver
+# /memories/repo/a12-bugs-resolved.md). Fix: garantir dono correto em TODO
+# boot, ANTES do early-return abaixo — roda mesmo fora do fluxo de seed do
+# EFS (DEV) porque e local/barato e protege qualquer ambiente que venha a
+# permitir atualizacoes de plugin no futuro.
+mkdir -p "${WP_PATH}/wp-content/upgrade-temp-backup"
+chown -R www-data:www-data "${WP_PATH}/wp-content/upgrade-temp-backup"
+
 # Rotina apenas para tasks ECS com EFS montado (DEV).
 # Ativar via env var A12_EFS_SEED=1 na task definition.
 if [[ "${A12_EFS_SEED:-0}" != "1" ]]; then
@@ -12,13 +32,13 @@ if [[ "${A12_EFS_SEED:-0}" != "1" ]]; then
   exec docker-entrypoint.sh apache2-foreground
 fi
 
-WP_PATH="/var/www/html"
 BAKED_PLUGINS="/opt/a12-baked/wp-content/plugins"
 
 is_empty_dir() {
   local dir="$1"
   [[ -d "$dir" ]] && [[ -z "$(ls -A "$dir" 2>/dev/null)" ]]
 }
+
 
 # wp-content/plugins — seed a partir do snapshot baked no build.
 # Sem isso, a primeira montagem de EFS vazio apaga os plugins do Composer.
