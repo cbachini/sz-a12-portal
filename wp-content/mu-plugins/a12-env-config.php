@@ -19,9 +19,30 @@ define( 'A12_ENV', getenv( 'A12_ENV' ) ?: 'local' );
 // Em container (qualquer ambiente não-local), bloqueia modificações de arquivos
 // pelo painel admin. Core, plugins e temas só mudam via rebuild da imagem Docker.
 if ( A12_ENV !== 'local' ) {
-    define( 'DISALLOW_FILE_MODS', true );
-    define( 'AUTOMATIC_UPDATER_DISABLED', true );
+    // O core do WordPress (wp-admin/wp-includes/index.php) NUNCA se
+    // auto-atualiza em nenhum ambiente containerizado, nem em DEV: esses
+    // arquivos vivem no filesystem efêmero do container (baked na imagem
+    // Docker, copiados pelo docker-entrypoint em cada boot), não em EFS.
+    // Uma auto-atualização de core seria perdida no próximo deploy e, com
+    // mais de uma task rodando, cada uma poderia acabar com uma versão de
+    // core diferente. Core só muda trocando a tag da imagem base no
+    // Dockerfile + rebuild.
     define( 'WP_AUTO_UPDATE_CORE', false );
+
+    if ( A12_ENV === 'dev' ) {
+        // Em DEV, wp-content/plugins fica em EFS persistente (não efêmero),
+        // então liberar atualização de plugins/temas pelo wp-admin serve
+        // como ambiente de teste: valida a nova versão ali antes de
+        // promovê-la para composer.json e rebuildar a imagem para
+        // staging/produção. Ver scripts/sync-composer-versions.sh.
+        define( 'DISALLOW_FILE_MODS', false );
+        define( 'AUTOMATIC_UPDATER_DISABLED', false );
+    } else {
+        // Staging/produção seguem 100% travados: plugins e temas só mudam
+        // via rebuild da imagem Docker (composer.json é a fonte da verdade).
+        define( 'DISALLOW_FILE_MODS', true );
+        define( 'AUTOMATIC_UPDATER_DISABLED', true );
+    }
 
     // Padrão de idioma do portal: pt_BR.
     // Mantém o idioma explícito, evitando voltar para en_US após rebuild/redeploy.

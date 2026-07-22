@@ -73,6 +73,10 @@ RUN curl -sS -o /usr/local/bin/wp \
     && chmod +x /usr/local/bin/wp \
     && wp --info --allow-root
 
+# Script de auto-heal para ambiente local/dev
+COPY scripts/local-wp-autoheal.sh /usr/local/bin/local-wp-autoheal.sh
+RUN chmod +x /usr/local/bin/local-wp-autoheal.sh
+
 # ---------------------------------------------------------------
 # Configuração PHP customizada
 # ---------------------------------------------------------------
@@ -141,6 +145,55 @@ RUN WP_VER=$(grep -oP "(?<=\\\$wp_version = ')[\d.]+" /usr/src/wordpress/wp-incl
     && unzip -q /tmp/pt_BR_core.zip -d /usr/src/wordpress/wp-content/languages/ \
     && rm /tmp/pt_BR_core.zip \
     && echo "pt_BR language files baked for WP ${WP_VER}"
+
+# ---------------------------------------------------------------
+# Traducoes pt-BR dos plugins — baked na imagem (NAO fica em EFS)
+# Motivo: wp-content/languages e lido via load_textdomain() em TODA
+# requisicao (core + cada plugin ativo + tema) e nao passa pelo OPcache
+# (e dado, nao bytecode PHP) — diferente de wp-content/plugins/*.php,
+# que e compilado uma vez e cacheado em memoria. Montar languages em
+# EFS/NFS gera latencia recorrente por request (~800-950ms medidos em
+# 2026-07-22). Ver /memories/repo/a12-bugs-resolved.md.
+# Resolve versao real de cada plugin instalado (header do arquivo
+# principal) e baixa a traducao da API oficial do WordPress.org,
+# tolerando plugins sem traducao publica (ex.: s3-uploads, elementor-pro).
+# ---------------------------------------------------------------
+RUN mkdir -p /usr/src/wordpress/wp-content/languages/plugins \
+    && for plugin_dir in /var/www/html/wp-content/plugins/*/; do \
+         slug=$(basename "$plugin_dir"); \
+         main_file=$(grep -rl "^[[:space:]]*\*[[:space:]]*Version:" "$plugin_dir" --include="*.php" -m1 2>/dev/null | head -n1); \
+         if [ -z "$main_file" ]; then \
+           echo "SKIP ${slug} (sem header de versao encontrado)"; \
+           continue; \
+         fi; \
+         ver=$(grep -oP "(?<=Version:)[[:space:]]*[0-9][0-9.]*" "$main_file" | head -n1 | tr -d '[:space:]'); \
+         if [ -z "$ver" ]; then \
+           echo "SKIP ${slug} (versao nao identificada)"; \
+           continue; \
+         fi; \
+         echo "Tentando traducao pt_BR: ${slug} ${ver}"; \
+         curl -fsSL "https://downloads.wordpress.org/translation/plugin/${slug}/${ver}/pt_BR.zip" -o "/tmp/${slug}-ptbr.zip" \
+           && unzip -q -o "/tmp/${slug}-ptbr.zip" -d /usr/src/wordpress/wp-content/languages/plugins/ \
+           && rm -f "/tmp/${slug}-ptbr.zip" \
+           && echo "OK: ${slug} ${ver}" \
+           || echo "SEM TRADUCAO disponivel (ignorado): ${slug} ${ver}"; \
+       done
+
+# ---------------------------------------------------------------
+# Snapshot dos plugins baked (usado para seed do EFS em AWS/ECS)
+# Necessário porque montar EFS em wp-content/plugins sobrepõe (overlay)
+# o que o Composer instalou no build. O script aws-efs-seed.sh usa esta
+# cópia para popular o EFS somente quando ele estiver vazio.
+# ---------------------------------------------------------------
+RUN mkdir -p /opt/a12-baked/wp-content/plugins \
+    && cp -a /var/www/html/wp-content/plugins/. /opt/a12-baked/wp-content/plugins/
+
+# ---------------------------------------------------------------
+# Script de seed do EFS para ambiente AWS/ECS (DEV)
+# Ativado apenas quando A12_EFS_SEED=1 na task definition.
+# ---------------------------------------------------------------
+COPY scripts/aws-efs-seed.sh /usr/local/bin/aws-efs-seed.sh
+RUN chmod +x /usr/local/bin/aws-efs-seed.sh
 
 # ---------------------------------------------------------------
 # Permissões
